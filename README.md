@@ -12,6 +12,18 @@ License: GPLv3
 
 ---
 
+## Documentation for End Users
+
+📚 **New to MarkAPI?** Check out our comprehensive user guides:
+
+- **[Installation Guide](docs/user-guide/01-Installation-Guide.md)** - Step-by-step instructions to install MarkAPI
+- **[XML Validation Guide](docs/user-guide/02-XML-Validation-Guide.md)** - How to validate XML documents
+- **[User Documentation Index](docs/user-guide/README.md)** - Complete documentation overview
+
+These guides are designed for non-developers and provide detailed instructions in Portuguese for installation and usage.
+
+---
+
 ## Development Environment
 
 You can use Docker directly or via `make`. To see available commands:
