@@ -61,6 +61,9 @@ Execute o script de instalação:
 
 # Para Windows (usando Git Bash):
 bash install.sh
+
+# Ou simplesmente use o Makefile (funciona em todos os sistemas):
+make install
 ```
 
 O script irá:
@@ -106,6 +109,9 @@ Para atualizar o MarkAPI para a versão mais recente:
 
 # Para Windows (usando Git Bash):
 bash update.sh
+
+# Ou simplesmente use o Makefile (funciona em todos os sistemas):
+make update
 ```
 
 O script de atualização irá:
