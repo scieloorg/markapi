@@ -16,6 +16,7 @@ License: GPLv3
 
 **For end users** (non-developers) who want to install and use MarkAPI:
 
+- **[🇧🇷 LEIA-ME em Português](LEIA-ME.md)** - Guia completo em português
 - **[Quick Start Guide](QUICK_START.md)** - Fast installation with essential commands
 - **[Complete Installation Guide](INSTALLATION.md)** - Detailed instructions with troubleshooting
 
@@ -23,7 +24,7 @@ The Installation Guide includes:
 - Easy installation with automated script (`install.sh` or `make install`)
 - Simple update process (`update.sh` or `make update`)
 - Common commands and troubleshooting
-- User-friendly instructions in Portuguese
+- User-friendly instructions
 
 ---
 
