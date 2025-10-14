@@ -12,6 +12,18 @@ License: GPLv3
 
 ---
 
+## Quick Start for End Users
+
+**For end users** (non-developers) who want to install and use MarkAPI, please see the simplified **[Installation Guide](INSTALLATION.md)**.
+
+The Installation Guide includes:
+- Easy installation with automated script
+- Simple update process
+- Common commands and troubleshooting
+- User-friendly instructions in Portuguese
+
+---
+
 ## Development Environment
 
 You can use Docker directly or via `make`. To see available commands:

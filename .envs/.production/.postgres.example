@@ -1,0 +1,9 @@
+# PostgreSQL
+# ------------------------------------------------------------------------------
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+POSTGRES_DB=markapi_production
+
+# IMPORTANTE: Use senhas seguras e diferentes em produção
+POSTGRES_USER=markapi_prod_user
+POSTGRES_PASSWORD=CHANGE_THIS_TO_A_SECURE_PASSWORD

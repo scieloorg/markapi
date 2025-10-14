@@ -1,0 +1,57 @@
+# General
+# ------------------------------------------------------------------------------
+# DJANGO_READ_DOT_ENV_FILE=True
+DJANGO_SETTINGS_MODULE=config.settings.production
+DJANGO_SECRET_KEY=CHANGE_THIS_TO_A_LONG_RANDOM_STRING_FOR_SECURITY
+DJANGO_ADMIN_URL=CHANGE_THIS_TO_HIDE_ADMIN_URL/
+DJANGO_ALLOWED_HOSTS=.example.com,localhost
+
+# Security
+# ------------------------------------------------------------------------------
+# TIP: better off using DNS, however, redirect is OK too
+DJANGO_SECURE_SSL_REDIRECT=False
+
+# Email
+# ------------------------------------------------------------------------------
+MAILGUN_API_KEY=
+DJANGO_SERVER_EMAIL=
+MAILGUN_DOMAIN=
+
+# AWS - Configuração para uso com S3 (opcional)
+# ------------------------------------------------------------------------------
+DJANGO_AWS_ACCESS_KEY_ID=
+DJANGO_AWS_SECRET_ACCESS_KEY=
+DJANGO_AWS_STORAGE_BUCKET_NAME=
+
+# Django Admin - Configuração de usuário admin inicial
+# ------------------------------------------------------------------------------
+DJANGO_SUPERUSER_PASSWORD=change_this_admin_password
+
+# django-allauth
+# ------------------------------------------------------------------------------
+DJANGO_ACCOUNT_ALLOW_REGISTRATION=True
+
+# Gunicorn
+# ------------------------------------------------------------------------------
+WEB_CONCURRENCY=4
+
+# Redis
+# ------------------------------------------------------------------------------
+REDIS_URL=redis://redis:6379/0
+
+# Celery
+# ------------------------------------------------------------------------------
+CELERY_FLOWER_USER=admin
+CELERY_FLOWER_PASSWORD=change_this_secure_password
+
+# Sentry (opcional - monitoramento de erros)
+# ------------------------------------------------------------------------------
+SENTRY_DSN=
+
+# Timeout fetch_data
+# ------------------------------------------------------------------------------
+FETCH_DATA_TIMEOUT=5
+
+# HuggingFace Token (opcional)
+# ------------------------------------------------------------------------------
+HF_TOKEN=

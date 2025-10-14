@@ -1,0 +1,25 @@
+# General
+# ------------------------------------------------------------------------------
+USE_DOCKER=yes
+IPYTHONDIR=/app/.ipython
+
+# Redis
+# ------------------------------------------------------------------------------
+REDIS_URL=redis://redis:6379/0
+
+# Celery
+# ------------------------------------------------------------------------------
+
+# Flower - Credenciais de acesso ao painel do Celery Flower
+# IMPORTANTE: Altere estas credenciais para valores seguros em produção
+CELERY_FLOWER_USER=admin
+CELERY_FLOWER_PASSWORD=change_this_password_123
+
+# Timeout fetch_data
+# ------------------------------------------------------------------------------
+FETCH_DATA_TIMEOUT=2
+
+# HuggingFace Token (opcional)
+# ------------------------------------------------------------------------------
+# Se você usa modelos do HuggingFace, adicione seu token aqui
+HF_TOKEN=

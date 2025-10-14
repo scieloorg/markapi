@@ -134,4 +134,14 @@ clean_migrations: ## Remove all migrations
 
 clean_celery_logs:
 	@sudo truncate -s 0 $$(docker inspect --format='{{.LogPath}}' scielo_markup_local_celeryworker)
+
+############################################
+## Instalação/Atualização Simplificada   ##
+############################################
+
+install: ## Run simplified installation script for end users
+	@bash install.sh
+
+update: ## Run simplified update script for end users
+	@bash update.sh
 	

@@ -1,0 +1,9 @@
+# PostgreSQL
+# ------------------------------------------------------------------------------
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+POSTGRES_DB=scielo_core
+
+# IMPORTANTE: Altere o usuário e senha para valores seguros
+POSTGRES_USER=markapi_user
+POSTGRES_PASSWORD=change_this_secure_password_123
