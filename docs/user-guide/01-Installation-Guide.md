@@ -98,14 +98,26 @@ chmod 700 ../scms_data/markapi/data_prod
 
 ### Passo 4: Construir as Imagens Docker
 
+**Nota:** O MarkAPI suporta duas formas de implantação em produção:
+1. **Docker Compose** (recomendado para servidores únicos) - usando `production.yml`
+2. **Kubernetes** (recomendado para clusters) - veja os arquivos em `kubernetes/hml/`
+
+Para Docker Compose, se o arquivo `production.yml` não existir, você pode criar um baseado no `local.yml` ou usar diretamente o `local.yml` com ajustes nas variáveis de ambiente.
+
 ```bash
 # Construir as imagens do MarkAPI
+# Se production.yml existir:
 docker compose -f production.yml build
+
+# Alternativamente, use local.yml para testes ou ambientes menores:
+# docker compose -f local.yml build
 ```
 
 Este processo pode levar alguns minutos na primeira execução.
 
 ### Passo 5: Inicializar o Banco de Dados
+
+**Nota:** Substitua `production.yml` por `local.yml` se estiver usando este arquivo.
 
 ```bash
 # Executar migrações do banco de dados
@@ -161,13 +173,30 @@ Após a instalação bem-sucedida:
 
 Faça login com as credenciais do superusuário criadas no Passo 5.
 
+## Implantação com Kubernetes (Alternativa)
+
+Para ambientes de produção em larga escala, o MarkAPI pode ser implantado usando Kubernetes:
+
+```bash
+# Aplicar configurações do Kubernetes
+kubectl apply -f kubernetes/hml/
+
+# Verificar os pods
+kubectl get pods
+
+# Verificar os serviços
+kubectl get services
+```
+
+Consulte os arquivos YAML em `kubernetes/hml/` para mais detalhes sobre a configuração.
+
 ## Configuração Opcional: Proxy Reverso (Nginx/Traefik)
 
 Para ambiente de produção, é recomendado configurar um proxy reverso com HTTPS.
 
 ### Usando Traefik (incluído)
 
-O MarkAPI já vem configurado com Traefik. Edite o arquivo `.envs/.production/.django` e configure:
+O MarkAPI já vem configurado com Traefik para implantações Docker Compose. Edite o arquivo `.envs/.production/.django` e configure:
 
 ```
 DJANGO_ALLOWED_HOSTS=seu-dominio.com
