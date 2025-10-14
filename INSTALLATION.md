@@ -309,6 +309,30 @@ Se você encontrar problemas não listados aqui:
 2. Verifique as issues abertas no GitHub: https://github.com/scieloorg/markapi/issues
 3. Abra uma nova issue descrevendo o problema em detalhes
 
+## Instalação em Produção
+
+**AVISO**: A instalação em produção requer considerações adicionais de segurança e configuração.
+
+### Opções de Deployment
+
+1. **Docker Compose (Produção)**: Use `install-production.sh` (se disponível production.yml)
+2. **Kubernetes**: Veja configurações na pasta `kubernetes/` para deployment em cluster
+
+### Considerações importantes para produção:
+
+- **Segurança**: Altere TODAS as senhas e chaves secretas
+- **HTTPS**: Configure SSL/TLS (recomendado: Let's Encrypt)
+- **Backup**: Configure backups automáticos do banco de dados
+- **Monitoramento**: Configure Sentry ou outra ferramenta de monitoramento
+- **Firewall**: Configure regras apropriadas de firewall
+- **Domínio**: Configure DNS e ALLOWED_HOSTS corretamente
+- **Email**: Configure um servidor SMTP real (não use MailHog)
+- **Recursos**: Dimensione adequadamente CPU, memória e disco
+
+Para instruções detalhadas de produção, consulte:
+- [Docker deployment guide](http://cookiecutter-django.readthedocs.io/en/latest/deployment-with-docker.html)
+- Configurações de Kubernetes na pasta `kubernetes/`
+
 ## Informações Técnicas
 
 - **Python**: 3.11
