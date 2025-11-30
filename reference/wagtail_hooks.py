@@ -25,7 +25,7 @@ class ReferenceCreateView(CreateView):
             if linea:  # Evitar procesar líneas vacías
                 new_reference = Reference.objects.create(
                     mixed_citation=linea,
-                    status=1,  # Estatus predeterminado
+                    estatus=1,  # Estatus predeterminado
                     creator=self.request.user,  # Usuario asociado
                 )
                 get_reference.delay(new_reference.id)
