@@ -32,7 +32,7 @@ def language_iso(code):
         lang = Language.get(code)
         if lang.is_valid():
             return lang.language or ""
-    except Exception:
+    except ValueError:
         pass
     return ""
 
@@ -43,6 +43,8 @@ def _get_user(request, username=None, user_id=None):
     Attempts to look up the user by ``request.user_id`` first.  If that
     attribute is missing (``AttributeError``), falls back to ``user_id``
     or ``username``.
+
+    Returns ``None`` when no lookup parameter is available.
     """
     User = get_user_model()
     try:
