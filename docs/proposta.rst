@@ -74,6 +74,55 @@ Validação de XML e geração de PDFs
   * **validar** o XML contra o schema, regras de negócio e conteúdo;
   * **gerar PDFs** a partir do XML, em cada idioma disponível.
 
+Marcação automática de referências bibliográficas
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Um dos serviços centrais do MarkAPI é a **marcação automática das
+referências bibliográficas** do artigo. Esse serviço é exposto via API
+REST (``ReferenceViewSet`` em ``reference/api/v1/views.py``) e também
+utilizado internamente pelo fluxo de conversão DOCX → XML.
+
+* **Entrada**: uma referência em texto livre (``mixed-citation``) ou um
+  bloco contendo várias referências, uma por linha. A API REST aceita
+  requisições ``POST`` autenticadas com o JSON
+  ``{"reference": "...", "type": "xml" | "marked"}``.
+* **Processamento**:
+
+  * O texto é submetido a um LLM (``LlamaService`` em ``model_ai``,
+    com prompts e ``response_format`` definidos em
+    ``reference/config.py``).
+  * O modelo identifica os elementos da referência — autores, título do
+    trabalho, fonte, ano, volume, fascículo, páginas, DOI, tipo de
+    publicação (artigo, livro, capítulo, *webpage*, *data*, etc.).
+  * O resultado é normalizado e convertido em um elemento
+    ``<element-citation>`` no padrão SPS (ver ``reference/data_utils.py``,
+    função ``get_xml``), incluindo atributos como ``publication-type`` e
+    *namespaces* (por exemplo, ``xlink``) quando aplicável.
+
+* **Persistência e reuso**: cada referência marcada é armazenada nos
+  modelos ``Reference`` e ``ElementCitation``, com um ``status``
+  controlado (``ReferenceStatus``). Requisições subsequentes para a
+  mesma ``mixed-citation`` reaproveitam o resultado, evitando chamadas
+  repetidas ao LLM.
+* **Saída**: a API devolve, conforme o parâmetro ``type``:
+
+  * ``xml`` — o trecho ``<element-citation>`` pronto para ser embutido
+    no XML SPS;
+  * ``marked`` — a representação intermediária estruturada (campos
+    identificados pelo modelo).
+
+* **Observabilidade e robustez**: erros do LLM
+  (``LlamaDisabledError``, ``LlamaNotInstalledError``,
+  ``LlamaModelNotFoundError`` e exceções inesperadas) são registrados
+  via ``tracker.GeneralEvent``, permitindo auditoria e diagnóstico do
+  serviço de marcação.
+* **Revisão manual**: o resultado da marcação automática de referências
+  pode ser revisado e ajustado pelo usuário antes da geração final do
+  pacote SPS, mantendo a qualidade exigida pelo fluxo editorial.
+
+A configuração do modelo de IA usado nesse serviço é descrita no
+`Guia rápido: baixar e configurar o modelo do MarkAPI <https://github.com/scieloorg/markapi/wiki/Guia-r%C3%A1pido:-baixar-e-configurar-o-modelo-do-MarkAPI-para-marca%C3%A7%C3%A3o-de-refer%C3%AAncias-em-PDF>`_.
+
 Marcação automatizada com LLM (configurável)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
