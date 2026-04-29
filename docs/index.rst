@@ -10,6 +10,7 @@ Welcome to SciELO Core's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   proposta
    howto
    users
 
