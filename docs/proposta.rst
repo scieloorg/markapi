@@ -38,9 +38,13 @@ em servidores institucionais:
   internet, possibilitando o uso distribuído por equipes em
   diferentes localidades.
 
-Em todos os modos a distribuição é baseada em contêineres Docker
-(``local.yml`` para desenvolvimento e ``production.yml`` para produção),
-o que padroniza o ambiente e simplifica a instalação.
+Em todos os modos a distribuição é baseada em contêineres Docker.
+Para desenvolvimento, há um Compose pronto em ``local.yml`` com os
+serviços ``django``, ``postgres``, ``redis``, ``celeryworker``,
+``celerybeat``, ``flower`` e ``mailhog``. Para produção em ambientes
+maiores há manifestos Kubernetes em ``kubernetes/`` (Deployments para
+Django/Celery e StatefulSets para PostgreSQL e Redis), o que padroniza
+o ambiente e simplifica a instalação.
 
 Requisitos de hardware e opções de LLM
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -172,18 +176,188 @@ Ajustes manuais pelo usuário
 Arquitetura em alto nível
 ----------------------------------------------------------------------
 
-O projeto é construído sobre Django/Wagtail, com processamento
-assíncrono via Celery e Redis. Os principais módulos são:
+Stack tecnológica
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+O MarkAPI é uma aplicação Python construída sobre o ecossistema
+Django, com camadas adicionais para CMS, processamento assíncrono,
+API REST e integração com modelos de linguagem (LLMs).
+
+* **Linguagem e runtime**
+
+  * Python 3 (executado em contêineres Docker baseados em imagens
+    oficiais; ver ``compose/local/django/Dockerfile`` e
+    ``compose/production/``).
+
+* **Framework web e CMS**
+
+  * `Django 5 <https://www.djangoproject.com/>`_ — framework web
+    principal, ORM, autenticação, *admin* e *settings* organizados
+    em ``config/settings/`` (``base.py``, ``local.py``,
+    ``production.py``).
+  * `Wagtail 6 <https://wagtail.org/>`_ — CMS sobre Django para as
+    páginas do site, *snippets* e administração editorial. Apps
+    auxiliares: ``wagtail-modeladmin``, ``wagtailmenus``,
+    ``wagtail-localize`` (i18n), ``wagtail-autocomplete`` e
+    ``wagtail-django-recaptcha``. *Hooks* específicos do projeto
+    ficam em ``<app>/wagtail_hooks.py``.
+  * ``django-environ`` para configuração via variáveis de ambiente
+    (arquivos em ``.envs/.local/`` e ``.envs/.production/``).
+  * ``django-compressor`` e ``whitenoise`` para *assets* estáticos.
+
+* **API REST**
+
+  * `Django REST Framework 3.15 <https://www.django-rest-framework.org/>`_
+    para a camada de API (``reference/api/v1/views.py``,
+    ``config/api_router.py``).
+  * `djangorestframework-simplejwt <https://django-rest-framework-simplejwt.readthedocs.io/>`_
+    para autenticação JWT dos clientes da API.
+
+* **Banco de dados**
+
+  * `PostgreSQL <https://www.postgresql.org/>`_ como banco
+    relacional principal (imagem custom em
+    ``compose/production/postgres/Dockerfile``; em produção,
+    StatefulSet em ``kubernetes/hml/statefulset-markapi-hml-postgresql.yml``).
+  * Driver ``psycopg2-binary`` (em produção).
+
+* **Processamento assíncrono e agendamento**
+
+  * `Celery 5 <https://docs.celeryq.dev/>`_ como *task queue*
+    distribuída para as operações de marcação, conversão,
+    validação e empacotamento (``model_ai/tasks.py``,
+    ``xml_manager/tasks.py``). A configuração da aplicação Celery
+    está em ``config/celery_app.py``.
+  * `Redis 6 <https://redis.io/>`_ como *broker* e *backend* de
+    resultados (``redis``/``hiredis`` no ``requirements/base.txt``;
+    StatefulSet em ``kubernetes/hml/statefulset-markapi-hml-redis.yml``).
+  * `Kombu 5 <https://kombu.readthedocs.io/>`_ — biblioteca de
+    mensageria usada pelo Celery.
+  * `django-celery-beat <https://django-celery-beat.readthedocs.io/>`_
+    para tarefas agendadas (cron) gerenciáveis pelo *admin*, com
+    ``django_celery_results`` para persistência de resultados.
+  * `Flower <https://flower.readthedocs.io/>`_ para monitoramento
+    de *workers* e tarefas Celery (serviço ``flower`` em
+    ``local.yml``).
+
+* **Servidor de aplicação (produção)**
+
+  * `Gunicorn <https://gunicorn.org/>`_ + `gevent <http://www.gevent.org/>`_
+    como WSGI server (ver ``requirements/production.txt``).
+
+* **Processamento de XML, DOCX e SPS**
+
+  * `lxml <https://lxml.de/>`_ — parsing/serialização de XML e
+    aplicação de XSLT.
+  * `python-docx <https://python-docx.readthedocs.io/>`_ — leitura
+    e geração de documentos ``.docx``.
+  * `packtools <https://github.com/scieloorg/packtools>`_
+    (``git+...packtools@4.12.6``) — validação do XML e geração de
+    PDFs no padrão SPS.
+  * `langdetect <https://pypi.org/project/langdetect/>`_ /
+    `langid <https://github.com/saffsd/langid.py>`_ — detecção de
+    idioma.
+  * `tenacity <https://tenacity.readthedocs.io/>`_ — *retries*
+    para operações sujeitas a falhas transitórias (downloads,
+    chamadas a serviços externos).
+
+* **Modelos de linguagem (LLM)**
+
+  * `llama-cpp-python <https://llama-cpp-python.readthedocs.io/>`_
+    para execução local de modelos LLaMA/GGUF, com suporte a CPU
+    e GPU (``model_ai/llama.py``, ``LlamaService``).
+  * `huggingface-hub <https://pypi.org/project/huggingface-hub/>`_
+    para *download* dos pesos do modelo a partir de repositórios
+    Hugging Face (com instalação opcional via
+    ``requirements/extra-llama.txt``).
+  * `google-generativeai <https://pypi.org/project/google-generativeai/>`_
+    como alternativa de provedor externo (Google Gemini), conforme
+    ``reference/config_gemini.py``.
+
+* **E-mail e observabilidade**
+
+  * `MailHog <https://github.com/mailhog/MailHog>`_ para captura
+    de e-mails em desenvolvimento (``mailhog`` em ``local.yml``).
+  * ``django-anymail`` para envio em produção.
+  * `Sentry <https://sentry.io/>`_ (``sentry-sdk[django]``) e
+    `Elastic APM <https://pypi.org/project/elastic-apm/>`_ para
+    monitoramento e *tracing* em produção.
+  * App ``tracker`` interno (``tracker.GeneralEvent``) para
+    registro estruturado de eventos do domínio (incluindo erros
+    do LLM).
+
+* **Empacotamento e distribuição**
+
+  * **Docker / Docker Compose** para desenvolvimento (``local.yml``).
+  * **Kubernetes** para produção, com manifestos em ``kubernetes/``
+    (Deployments para ``django``, ``celeryworker``, ``celerybeat``;
+    StatefulSets para ``postgresql`` e ``redis``; *Services* e
+    *ConfigMaps* correspondentes).
+
+* **Qualidade de código**
+
+  * ``flake8`` (linha máxima de 120 caracteres) e ``isort``,
+    configurados em ``setup.cfg`` (migrations excluídas do *lint*).
+
+Organização do código
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A aplicação está dividida em apps Django independentes, registrados
+em ``INSTALLED_APPS`` (ver ``config/settings/base.py``):
+
+* ``config`` — projeto Django: ``settings/`` por ambiente,
+  ``urls.py``, ``api_router.py``, ``celery_app.py`` e ``wsgi.py``.
+* ``core`` — páginas Wagtail (``home``, ``search``), templates,
+  *static files* e *hooks* globais.
+* ``core_settings`` — *settings* configuráveis pela equipe editorial
+  via *admin*.
+* ``users`` — modelo de usuário e autenticação.
 * ``xml_manager`` — gerenciamento do ciclo de vida do XML (upload,
-  conversão, validação, empacotamento).
-* ``reference`` — marcação de referências bibliográficas, incluindo
-  integração com modelos de IA.
-* ``model_ai`` — abstração para configuração e uso de LLMs.
-* ``docx_layouts`` — modelos de layout DOCX usados como referência para
-  a marcação.
-* ``packtools`` (dependência externa) — validação do XML e geração de
-  PDFs no padrão SPS.
+  conversão DOCX → XML SPS, validação via ``packtools``,
+  empacotamento ``.zip`` SPS). Inclui ``models.py``, ``tasks.py``
+  (Celery), ``views.py`` e ``utils.py``.
+* ``reference`` — marcação de referências bibliográficas:
+
+  * ``api/v1/views.py`` — ``ReferenceViewSet`` (DRF) com
+    autenticação JWT;
+  * ``marker.py`` — orquestração da chamada ao LLM;
+  * ``data_utils.py`` — função ``get_xml`` que serializa o
+    resultado em ``<element-citation>`` SPS;
+  * ``config.py`` — *prompts* e ``response_format`` do LLM local;
+  * ``config_gemini.py`` — *prompts* e configuração para o
+    provedor Google Generative AI;
+  * ``models.py`` — ``Reference``, ``ElementCitation``,
+    ``ReferenceStatus`` (persistência e reuso).
+
+* ``model_ai`` — abstração para configuração e uso de LLMs:
+  ``llama.py`` (``LlamaService`` baseado em ``llama-cpp-python``),
+  ``exceptions.py`` (``LlamaDisabledError``,
+  ``LlamaNotInstalledError``, ``LlamaModelNotFoundError``),
+  ``tasks.py`` (Celery) e ``messages.py``.
+* ``docx_layouts`` — modelos de layout DOCX usados como referência
+  para a marcação automatizada.
+* ``tracker`` — registro de eventos (``GeneralEvent``) para
+  auditoria e diagnóstico (ex.: falhas do LLM no
+  ``ReferenceViewSet``).
+* ``django_celery_beat`` — agendamento de tarefas periódicas via
+  *admin*.
+
+Fluxo de execução típico
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+1. O usuário faz *upload* de um ``.docx`` pela interface Wagtail
+   (``xml_manager``).
+2. Uma tarefa Celery (``xml_manager/tasks.py``) extrai conteúdo via
+   ``python-docx`` e produz um XML inicial.
+3. As referências bibliográficas são enviadas ao serviço
+   ``reference`` (em lote ou via API REST), que invoca o
+   ``LlamaService`` (ou Google Generative AI) e armazena o resultado
+   em ``Reference``/``ElementCitation``.
+4. ``packtools`` valida o XML final e gera os PDFs por idioma.
+5. ``xml_manager`` empacota XML, PDFs, imagens e ativos em um
+   ``.zip`` SPS pronto para ingestão.
+6. Eventos de erro/sucesso são registrados em ``tracker`` e
+   *workers* podem ser monitorados via Flower.
 
 
 Público-alvo
