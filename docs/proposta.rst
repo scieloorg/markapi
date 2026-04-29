@@ -39,12 +39,14 @@ em servidores institucionais:
   diferentes localidades.
 
 Em todos os modos a distribuição é baseada em contêineres Docker.
-Para desenvolvimento, há um Compose pronto em ``local.yml`` com os
+Para desenvolvimento há um Compose pronto em ``local.yml`` com os
 serviços ``django``, ``postgres``, ``redis``, ``celeryworker``,
-``celerybeat``, ``flower`` e ``mailhog``. Para produção em ambientes
-maiores há manifestos Kubernetes em ``kubernetes/`` (Deployments para
-Django/Celery e StatefulSets para PostgreSQL e Redis), o que padroniza
-o ambiente e simplifica a instalação.
+``celerybeat``, ``flower`` e ``mailhog``. Para produção está
+prevista a entrega de um ``production.yml`` análogo (ainda em
+construção), além dos manifestos Kubernetes em ``kubernetes/``
+(Deployments para Django/Celery e StatefulSets para PostgreSQL e
+Redis) para ambientes maiores. Essa padronização simplifica a
+instalação em qualquer um dos modos descritos acima.
 
 Requisitos de hardware e opções de LLM
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -377,6 +379,130 @@ Público-alvo
   no formato SPS, com a opção de acelerar a marcação por meio de
   LLMs (locais ou contratados via API externa, conforme as
   possibilidades descritas em *Modos de Instalação*).
+
+
+Requisitos não funcionais
+----------------------------------------------------------------------
+
+Estes requisitos orientam o projeto e a evolução do MarkAPI,
+independentemente das funcionalidades específicas:
+
+* **Portabilidade de instalação**: a aplicação deve poder ser
+  instalada nos três modos descritos (desktop monousuário, servidor
+  em intranet e servidor na internet), reaproveitando o mesmo
+  conjunto de imagens Docker e o mesmo código-base.
+* **Reprodutibilidade do ambiente**: dependências fixadas em
+  ``requirements/base.txt``, ``requirements/local.txt`` e
+  ``requirements/production.txt``; ambiente padronizado via Docker
+  Compose (``local.yml``, ``production.yml`` previsto) e manifestos
+  Kubernetes (``kubernetes/``).
+* **Internacionalização (i18n) e localização (l10n)**: suporte a
+  múltiplos idiomas via ``django.middleware.locale.LocaleMiddleware``
+  e ``wagtail-localize``; conteúdo SPS multilíngue (PDFs por idioma)
+  com detecção via ``langdetect``/``langid``.
+* **Escalabilidade horizontal**: separação clara entre processo web
+  (Django/Gunicorn) e *workers* assíncronos (Celery), permitindo
+  escalar cada camada de forma independente em Kubernetes.
+* **Resiliência e tolerância a falhas**: tarefas idempotentes em
+  Celery, *retries* com ``tenacity`` para operações sujeitas a
+  falhas transitórias (downloads, chamadas a serviços externos) e
+  *broker* Redis com persistência configurável.
+* **Observabilidade**: registro estruturado de eventos do domínio
+  via ``tracker.GeneralEvent``, monitoramento de *workers* e tarefas
+  via Flower, integração com Sentry e Elastic APM em produção.
+* **Segurança**: autenticação JWT na API REST
+  (``djangorestframework-simplejwt``), proteção CSRF/clickjacking,
+  reCAPTCHA em formulários públicos (``wagtail-django-recaptcha``)
+  e gestão de segredos via variáveis de ambiente
+  (``django-environ``, arquivos em ``.envs/``); nenhum segredo
+  comitado no repositório.
+* **Privacidade dos dados**: a marcação pode ser executada
+  inteiramente *on-premise* (LLM local), sem envio dos manuscritos
+  a serviços externos. Quando o usuário/instituição opta por uma
+  API de LLM contratada, a responsabilidade por custo, política
+  de privacidade e termos de uso do provedor é do usuário.
+* **Desempenho**: aceleração por GPU quando disponível
+  (``llama-cpp-python``); processamento assíncrono em segundo plano
+  para não bloquear a interface; *cache* e reuso de marcações de
+  referências já processadas (``Reference``/``ElementCitation``
+  controlados por ``ReferenceStatus``).
+* **Conformidade com o SPS**: o XML produzido deve passar nas
+  validações do ``packtools`` (versão fixada em
+  ``requirements/base.txt``), garantindo aderência ao SciELO
+  Publishing Schema.
+* **Manutenibilidade**: organização modular em apps Django
+  independentes, código sob ``flake8`` (linha máxima de 120
+  caracteres) e ``isort``, conforme ``setup.cfg``.
+* **Auditabilidade**: histórico de alterações de marcações e
+  status (``ReferenceStatus``), tarefas Celery persistidas via
+  ``django_celery_results`` e eventos relevantes em ``tracker``.
+* **Compatibilidade com navegadores modernos** para a interface
+  Wagtail e *assets* servidos via ``whitenoise``/``django-compressor``.
+
+
+Perspectivas (funcionalidades futuras)
+----------------------------------------------------------------------
+
+A seguir, sugestões de evolução do MarkAPI a serem priorizadas
+conforme a demanda da comunidade SciELO e dos editores parceiros.
+Estas são *propostas*, ainda não implementadas:
+
+* **Suporte a novos provedores de LLM**: além do LLaMA local
+  (``llama-cpp-python``) e Google Gemini
+  (``google-generativeai``), oferecer integração configurável com
+  outros provedores (OpenAI, Anthropic, Mistral, Azure OpenAI,
+  modelos locais via Ollama/vLLM), com seleção pelo administrador
+  via ``core_settings``.
+* **Marcação assistida de outros elementos do SPS**: estender o
+  serviço atual de referências para outros blocos do XML SPS, como
+  *afiliações*, *autores*, *agradecimentos*, *financiamento*,
+  *figuras/tabelas* e *seções do corpo do texto*.
+* **Editor visual de XML SPS no navegador**: interface WYSIWYG
+  integrada ao Wagtail para revisão e ajuste manual do XML gerado,
+  com destaque das diferenças entre versões (LLM × revisão humana).
+* **Importação a partir de outros formatos**: além de ``.docx``,
+  aceitar ``.odt``, ``.rtf``, LaTeX e PDF (com OCR opcional)
+  como entrada para conversão em XML SPS.
+* **Validação incremental e diagnósticos amigáveis**: feedback em
+  tempo real durante a marcação, com mensagens de erro do
+  ``packtools`` traduzidas e contextualizadas para o editor.
+* **Integração com fontes externas de metadados**: enriquecimento
+  automático de referências a partir de Crossref, PubMed, DOI,
+  ORCID, ROR (afiliações) e SciELO, reduzindo erros de marcação
+  e padronizando identificadores.
+* **Empacotamento e ingestão automatizada**: publicação direta do
+  ``.zip`` SPS em sistemas downstream (SciELO PS, OJS, repositórios
+  institucionais) via APIs ou *webhooks*.
+* **Integração com fluxos editoriais**: conectores com OJS, ScholarOne
+  e plataformas similares para importar manuscritos aceitos e
+  exportar pacotes SPS de volta ao fluxo editorial.
+* **Versionamento e auditoria de marcações**: histórico completo
+  por documento e por referência, com diff entre versões e
+  possibilidade de *rollback*.
+* **Painéis e métricas**: *dashboard* no admin com tempo médio de
+  marcação por artigo, taxa de revisão manual sobre marcação
+  automática, qualidade do LLM por tipo de referência e custo
+  estimado quando usada API externa.
+* **Treinamento/ajuste fino do LLM local**: pipeline opcional para
+  *fine-tuning* do modelo com exemplos curados pela equipe
+  editorial, melhorando a precisão para o vocabulário e o estilo
+  de cada periódico.
+* **API pública versionada e documentada**: expansão do
+  ``ReferenceViewSet`` para uma API REST completa (e/ou GraphQL)
+  com documentação OpenAPI/Swagger e versionamento (``/api/v1``,
+  ``/api/v2``).
+* **SSO e perfis de acesso**: integração com provedores SAML/OIDC
+  (Shibboleth, Keycloak, ORCID) e perfis granulares por papel
+  (autor, marcador, revisor, administrador).
+* **Modo *offline* desktop**: empacotamento *all-in-one* (por
+  exemplo via Docker Desktop ou um instalador específico) para o
+  modo monousuário, com modelo LLM pequeno embutido e atualizações
+  controladas pelo próprio usuário.
+* **Acessibilidade (WCAG)**: revisão da interface Wagtail para
+  conformidade com diretrizes de acessibilidade.
+* **Telemetria opcional e anonimizada**: coleta opt-in de métricas
+  agregadas de uso para orientar a evolução do produto, sem
+  compartilhamento de conteúdo de manuscritos.
 
 
 Referências
