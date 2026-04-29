@@ -9,3 +9,6 @@ django-extensions==3.2.3  # https://github.com/django-extensions/django-extensio
 django-debug-toolbar  # https://github.com/jazzband/django-debug-toolbar
 
 pytest >= 7.0.7
+
+# Documentation
+myst-parser  # https://myst-parser.readthedocs.io/ (Markdown support for Sphinx)

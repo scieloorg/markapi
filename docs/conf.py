@@ -41,7 +41,15 @@ author = "SciELO"
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
+    "myst_parser",
 ]
+
+# Allow Sphinx to pick up Markdown files (e.g. `proposta.md`) in addition
+# to the default reStructuredText sources.
+source_suffix = {
+    ".rst": "restructuredtext",
+    ".md": "markdown",
+}
 
 # Add any paths that contain templates here, relative to this directory.
 # templates_path = ["_templates"]
