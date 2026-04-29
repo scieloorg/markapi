@@ -22,20 +22,46 @@ sobre o resultado final.
 Modos de Instalação
 ----------------------------------------------------------------------
 
-A aplicação foi projetada para ser flexível quanto à forma de
-implantação:
+Apesar de ser uma aplicação web, o MarkAPI foi projetado para ser
+flexível quanto à forma de implantação, atendendo desde um único
+marcador em sua estação de trabalho até equipes editoriais inteiras
+em servidores institucionais:
 
-* **Aplicação web desktop**: instalável em uma estação de trabalho
-  individual, com interface acessível pelo navegador local. Útil para
-  marcadores que trabalham com volumes pequenos ou que necessitam
-  trabalhar de forma autônoma.
-* **Aplicação em servidor**: instalável em um servidor compartilhado,
-  permitindo o uso por múltiplos usuários simultâneos, com
-  centralização de configurações, modelos e histórico de marcações.
+* **Desktop monousuário**: instalável em um único computador, com a
+  interface web acessada pelo navegador local. Indicado para
+  marcadores autônomos ou para volumes pequenos de processamento.
+* **Servidor em intranet**: instalado em um servidor da rede interna
+  da instituição, permitindo uso compartilhado por uma equipe
+  editorial, com centralização de configurações, modelos e histórico
+  de marcações.
+* **Servidor na internet**: instalado em um servidor exposto à
+  internet, possibilitando o uso distribuído por equipes em
+  diferentes localidades.
 
-Em ambos os modos a distribuição é baseada em contêineres Docker
+Em todos os modos a distribuição é baseada em contêineres Docker
 (``local.yml`` para desenvolvimento e ``production.yml`` para produção),
 o que padroniza o ambiente e simplifica a instalação.
+
+Requisitos de hardware e opções de LLM
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+O desempenho da marcação assistida por IA depende fortemente do
+ambiente em que o MarkAPI é instalado e do modelo de linguagem (LLM)
+escolhido:
+
+* **Servidor com GPU**: cenário de melhor desempenho. Permite o uso
+  de LLMs maiores, com tempos de resposta mais curtos para a marcação
+  de referências e demais tarefas assistidas por IA.
+* **Servidor ou desktop sem GPU**: a aplicação continua funcional,
+  mas é recomendado o uso de um **modelo LLM pequeno**, executado em
+  CPU. O custo computacional é maior por requisição e a velocidade,
+  menor; ainda assim, atende cenários de baixo a médio volume.
+* **API externa de LLM (opcional)**: é possível configurar o MarkAPI
+  para utilizar uma **API de LLM contratada** (provedor externo). Nesse
+  caso, o **custo financeiro** da API e a **escolha/responsabilidade
+  pelo modelo** ficam a cargo do **usuário ou da instituição** que
+  contratou o serviço; o projeto MarkAPI não se responsabiliza por
+  esses custos nem pelo conteúdo gerado por modelos de terceiros.
 
 
 Funcionalidades
@@ -163,12 +189,20 @@ assíncrono via Celery e Redis. Os principais módulos são:
 Público-alvo
 ----------------------------------------------------------------------
 
-* Equipes editoriais e marcadores de periódicos científicos da Rede
-  SciELO.
-* Editores que produzem conteúdo em DOCX e precisam publicá-lo no
-  formato SPS.
-* Instituições que desejem instalar a ferramenta em servidor próprio
-  para uso compartilhado, ou em estações de trabalho individuais.
+* **Marcadores autônomos**: profissionais que realizam marcação de
+  artigos em uma estação de trabalho individual, em modo
+  monousuário (instalação desktop).
+* **Equipes editoriais de periódicos científicos**: equipes da Rede
+  SciELO ou de outras instituições que precisam compartilhar a
+  ferramenta em um servidor de intranet, com vários usuários
+  simultâneos.
+* **Instituições com publicação distribuída**: organizações que
+  desejam disponibilizar o MarkAPI em um servidor exposto à internet
+  para uso por equipes em diferentes localidades.
+* **Editores que produzem conteúdo em DOCX** e precisam publicá-lo
+  no formato SPS, com a opção de acelerar a marcação por meio de
+  LLMs (locais ou contratados via API externa, conforme as
+  possibilidades descritas em *Modos de Instalação*).
 
 
 Referências
