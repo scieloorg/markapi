@@ -10,7 +10,7 @@ sentry-sdk[django]==2.5.1  # https://github.com/getsentry/sentry-python
 # Django
 # ------------------------------------------------------------------------------
 django-anymail  # https://github.com/anymail/django-anymail
-setuptools>=68.2.2,<82
+setuptools>=82.0.1,<83
 
 
 # Elastic-APM  # https://pypi.org/project/elastic-apm/
