@@ -11,5 +11,5 @@ django-debug-toolbar  # https://github.com/jazzband/django-debug-toolbar
 pytest==9.0.3
 pytest-django==4.11.1
 pytest-cov==7.1.0
-coverage==7.10.6
+coverage==7.14.0
 django-coverage-plugin==3.1.0
