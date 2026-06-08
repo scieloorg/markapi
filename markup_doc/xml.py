@@ -688,9 +688,9 @@ def get_xml(article_docx, data_front, data, data_back, xref_map=None):
             node_table_text = d["value"]["content"]
 
             # Quitar saltos de línea y espacios extra
-            node_table_text = re.sub(r"\s*\n\s*", "", node_table_text).replace(
-                "<br>", ""
-            )
+            node_table_text = re.sub(r"\s*\n\s*", "", node_table_text).replace("<br>","")
+            node_table_text = re.sub(r"<(?![/a-zA-Z_])", "&lt;", node_table_text)
+            node_table_text = node_table_text.replace("&nbsp;", " ")
             node_table_text = re.sub(r"&(?!\w+;|#\d+;)", "&amp;", node_table_text)
 
             tabla_element = parse_xml_fragment(node_table_text)
@@ -861,15 +861,18 @@ def get_xml(article_docx, data_front, data, data_back, xref_map=None):
                 node_p.append(child)
 
     for i, d in enumerate(data_back):
-        if d["value"]["label"] == "<sec>":
-            node_tit = etree.SubElement(node_reflist, "title")
-            append_fragment(node_tit, d["value"]["paragraph"])
-        if d["value"]["label"] == "<p>":
-            values = d["value"]
-            refid = values.get("refid") or f"B{i + 1}"
-            node_ref = etree.SubElement(node_reflist, "ref", attrib={"id": refid})
-            node_mix = etree.SubElement(node_ref, "mixed-citation")
-            append_fragment(node_mix, values["paragraph"])
+        if d['value']['label'] == '<sec>':
+            node_tit = etree.SubElement(node_reflist, 'title')
+            append_fragment(node_tit, d['value']['paragraph'])
+        if d['value']['label'] == '<p>':
+            if 'refid' not in d['value']:
+                continue
+            values = d['value']
+            node_ref = etree.SubElement(node_reflist, 'ref', attrib={"id": values['refid']})
+            #node_label = etree.SubElement(node_ref, 'label')
+            #append_fragment(node_label, values['refid'].replace('B', ''))
+            node_mix = etree.SubElement(node_ref, 'mixed-citation')
+            append_fragment(node_mix, values['paragraph'])
 
             if values.get("reftype") == "journal":
                 node_elem = etree.SubElement(
