@@ -1,8 +1,7 @@
 from django.conf import settings
-from rest_framework.routers import DefaultRouter, SimpleRouter
-
-from reference.api.v1.views import ReferenceViewSet
 from markup_doc.api.v1.views import ArticleViewSet
+from reference.api.v1.views import ReferenceViewSet
+from rest_framework.routers import DefaultRouter, SimpleRouter
 
 if settings.DEBUG:
     router = DefaultRouter()

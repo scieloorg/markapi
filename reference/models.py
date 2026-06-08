@@ -21,7 +21,7 @@ class ReferenceStatus(models.IntegerChoices):
 class Reference(CommonControlField, ClusterableModel):
     mixed_citation = models.TextField(_("Mixed Citation"), null=False, blank=True)
 
-    estatus = models.IntegerField(
+    status = models.IntegerField(
         _("Reference status"),
         choices=ReferenceStatus.choices,
         blank=True,
@@ -47,11 +47,11 @@ class ElementCitation(Orderable):
     marked_xml = models.TextField(_("Marked XML"), blank=True)
 
     score = models.IntegerField(
-        null=True, 
+        null=True,
         blank=True,
         validators=[
-            MinValueValidator(1),  # Mínimo 1
-            MaxValueValidator(10)  # Máximo 10
+            MinValueValidator(1),
+            MaxValueValidator(10)
         ],
         help_text=_("Rating from 1 to 10")
     )
