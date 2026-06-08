@@ -276,40 +276,6 @@ class RefParagraphBlock(ParagraphBlock):
         label = _("Ref Paragraph")
 
 
-class CollectionValuesModel(models.Model):
-    acron = models.CharField(max_length=10, unique=True)
-    name = models.CharField(max_length=255)
-
-    autocomplete_search_field = "acron"
-
-    def autocomplete_label(self):
-        return str(self)
-
-    def __str__(self):
-        return f"{self.acron.upper()} - {self.name}"
-
-
-class CollectionModel(models.Model):
-    collection = models.ForeignKey(
-        CollectionValuesModel, null=True, blank=True, on_delete=models.SET_NULL
-    )
-
-    autocomplete_search_field = "collection.acron"
-
-    def autocomplete_label(self):
-        return str(self)
-
-    panels = [
-        AutocompletePanel("collection"),
-    ]
-
-    def __str__(self):
-        if not self.collection:
-            return ""
-        acron = self.collection.acron or ""
-        return f"{acron.upper()} - {acron}"
-
-
 class JournalModel(models.Model):
     title = models.TextField(_("Title"), null=True, blank=True)
     short_title = models.TextField(_("Short Title"), null=True, blank=True)
@@ -400,14 +366,6 @@ class Issue(CommonControlField, ClusterableModel):
         )
 
 
-def get_default_collection_acron():
-    try:
-        obj = CollectionModel.objects.select_related("collection").first()
-        return obj.collection.acron if obj and obj.collection else ""
-    except Exception:
-        return ""
-
-
 class ArticleDocxMarkup(CommonControlField, ClusterableModel):
     title = models.TextField(_("Document Title"), null=True, blank=True)
     file = models.FileField(
@@ -434,7 +392,6 @@ class ArticleDocxMarkup(CommonControlField, ClusterableModel):
         default=ProcessStatus.PROCESSING,
     )
 
-    collection = models.CharField(max_length=10, default=get_default_collection_acron)
     journal = models.ForeignKey(
         JournalModel, null=True, blank=True, on_delete=models.SET_NULL
     )
@@ -516,7 +473,6 @@ class ArticleDocxMarkup(CommonControlField, ClusterableModel):
     panels = [
         FieldPanel("title"),
         FieldPanel("file"),
-        FieldPanel("collection"),
         AutocompletePanel("journal"),
         AutocompletePanel("issue"),
     ]
@@ -606,7 +562,6 @@ class MarkupXML(ArticleDocxMarkup):
     ]
 
     panels_details = [
-        FieldPanel("collection"),
         AutocompletePanel("journal"),
         FieldPanel("journal_title"),
         FieldPanel("short_title"),

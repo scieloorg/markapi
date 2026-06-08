@@ -18,7 +18,6 @@ from wagtail.snippets.views.snippets import (
 from config.menu import get_menu_order
 from markup_doc import views
 from markup_doc.models import (
-    CollectionModel,
     Issue,
     JournalModel,
     MarkupXML,
@@ -26,7 +25,6 @@ from markup_doc.models import (
     ProcessStatus,
     UploadDocx,
 )
-from markup_doc.sync_api import sync_collection_from_api
 from markup_doc.tasks import get_labels, task_sync_journals_from_api, update_xml
 from reference.wagtail_hooks import ReferenceModelViewSet
 
@@ -68,9 +66,6 @@ def xref_js():
 
 class ArticleDocxCreateView(CreateView):
     def dispatch(self, request, *args, **kwargs):
-        if not CollectionModel.objects.exists():
-            messages.warning(request, "Debes seleccionar primero una colección.")
-            return HttpResponseRedirect(self.get_success_url())
         if not JournalModel.objects.exists():
             messages.warning(
                 request, "Espera un momento, aún no existen elementos en Journal."
@@ -133,36 +128,6 @@ class MarkupXMLViewSet(SnippetViewSet):
     search_fields = ("title",)
 
 
-class CollectionModelCreateView(CreateView):
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        sync_collection_from_api()
-        return context
-
-    def form_valid(self, form):
-        form.instance.save()
-        task_sync_journals_from_api.delay()
-        return HttpResponseRedirect(self.get_success_url())
-
-
-class CollectionModelViewSet(SnippetViewSet):
-    model = CollectionModel
-    add_view_class = CollectionModelCreateView
-    menu_label = _("Coleção")
-    menu_icon = "folder-inverse"
-    add_to_admin_menu = False
-    exclude_from_explorer = False
-    list_per_page = 20
-    list_display = ("collection",)
-
-
-class JournalModelCreateView(CreateView):
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        task_sync_journals_from_api
-        return context
-
-
 class JournalModelViewSet(SnippetViewSet):
     model = JournalModel
     menu_label = _("Periódicos")
@@ -176,17 +141,12 @@ class JournalModelViewSet(SnippetViewSet):
         response = super().index_view(request)
 
         if isinstance(response, TemplateResponse):
-            if not CollectionModel.objects.exists():
-                messages.warning(request, "Debes seleccionar primero una colección.")
-                response.context_data["can_add"] = False
-                response.context_data["can_add_snippet"] = False
-                return response
-
             if not JournalModel.objects.exists():
                 messages.warning(
                     request,
                     "Sincronizando journals desde la API, espera unos momentos…",
                 )
+                task_sync_journals_from_api.delay()
                 response.context_data["can_add"] = False
                 response.context_data["can_add_snippet"] = False
                 return response
@@ -237,7 +197,6 @@ class ScieloSnippetViewSetGroup(SnippetViewSetGroup):
     menu_icon = "folder-open-inverse"
     menu_order = get_menu_order("scielo")
     items = (
-        CollectionModelViewSet,
         JournalModelViewSet,
         IssueViewSet,
     )

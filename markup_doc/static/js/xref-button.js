@@ -179,7 +179,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if ( path.indexOf('markupxml/edit') == -1 ){
         return false;
     }
-    var ids = ['collection', 'journal_title', 'short_title', 'title_nlm', 'acronym', 'issn', 'pissn', 'eissn', 'pubname']
+    var ids = ['journal_title', 'short_title', 'title_nlm', 'acronym', 'issn', 'pissn', 'eissn', 'pubname']
     $.each(ids, function(i, val){
         const collectionField = document.querySelector('#id_'+val);
         if (collectionField) {

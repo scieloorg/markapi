@@ -145,7 +145,6 @@ class Migration(migrations.Migration):
                 (
                     "collection",
                     models.CharField(
-                        default=markup_doc.models.get_default_collection_acron,
                         max_length=10,
                     ),
                 ),

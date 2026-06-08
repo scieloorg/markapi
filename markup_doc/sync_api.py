@@ -7,7 +7,7 @@ from django.db.models import Q
 from core.models import CoreSyncState
 from core.utils.requester import fetch_data as fetch
 from core.utils.sync_state import finalize_core_sync_state, track_max_from_item
-from markup_doc.models import CollectionModel, CollectionValuesModel, Issue, JournalModel
+from markup_doc.models import Issue, JournalModel
 
 logger = logging.getLogger(__name__)
 
@@ -23,31 +23,6 @@ def _iter_api_pages(url, resource_name):
         )
         yield data.get("results", [])
         url = data.get("next")
-
-
-def sync_collection_from_api():
-    url = settings.CORE_COLLECTION_API_URL
-    all_results = []
-
-    while url:
-        logger.info("Syncing collections page: %s", url)
-        data = fetch(
-            url, headers={"Accept": "application/json"}, json=True, timeout=(10, 60)
-        )
-        all_results.extend(data["results"])
-        url = data["next"]
-
-    logger.info("Deleting existing collection data before sync")
-    CollectionModel.objects.all().delete()
-    CollectionValuesModel.objects.all().delete()
-
-    for item in all_results:
-        acron = item.get("acron3")
-        name = item.get("main_name", "").strip()
-        if acron and name:
-            CollectionValuesModel.objects.update_or_create(
-                acron=acron, defaults={"name": name}
-            )
 
 
 def _build_journal_from_api_item(item):
@@ -94,7 +69,6 @@ def build_api_url_core(domain, endpoint, params):
 
 
 def sync_journals_from_api(
-    collection_acron=None,
     issn_scielo=None,
     from_date_updated=None,
 ):
@@ -105,8 +79,6 @@ def sync_journals_from_api(
         )
 
     params = {"from_date_updated": from_date_updated}
-    if collection_acron:
-        params["collection"] = collection_acron
     if issn_scielo:
         params["issn_scielo"] = issn_scielo
 
