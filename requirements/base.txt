@@ -52,4 +52,4 @@ python-docx==1.1.2
 
 # huggingface-hub
 # ------------------------------------------------------------------------------
-huggingface_hub==0.26.1  # https://pypi.org/project/huggingface-hub/
+huggingface_hub==1.16.1  # https://pypi.org/project/huggingface-hub/
